@@ -14,9 +14,10 @@ spring-boot-cache-starter 基于spring-boot 高效分布式缓存
 #### 使用方式
 
 1. 获取spring-boot-cache-starter 源代码
-   git clone  git@gitee.com:dream0708/spring-boot-cache-starter.git
+   git clone git@gitee.com:dream0708/spring-boot-cache-starter.git
+        或者 git@github.com:dream0708/spring-boot-cache-starter.git
 2. 安装到本地 Maven 仓库
-   # spring-boot-cache-starter/spring-boot-cache-starter 目录下执行
+   spring-boot-cache-starter/spring-boot-cache-starter 目录下执行
    mvn clean install
 3. 在SpringBoot项目中添加依赖
    <dependency>
@@ -27,19 +28,17 @@ spring-boot-cache-starter 基于spring-boot 高效分布式缓存
 
 #### 使用说明
 
-1. 添加Redis支持
+1. 添加Redis支持(暂时只支持redis缓存 ，后续添加Memecached等)
    在application.properties添加redis配置(支持多种Redis方式）
-   
-
-1. spring.redis.host=xx.xx.xx.xx
-1.    spring.redis.port=6379 
-1.    spring.redis.password=xxx
-1.    spring.redis.maxIdle=10 
-1.    spring.redis.maxTotal=5 
-1.    spring.redis.maxWaitMillis=5000 
-1.    spring.redis.testOnBorrow=false 
-1.    spring.redis.index=11
-2. 配置@EnableAutoCache
+- 1.    spring.redis.host=xx.xx.xx.xx
+- 1.    spring.redis.port=xx
+- 1.    spring.redis.password=xxx
+- 1.    spring.redis.maxIdle=10 
+- 1.    spring.redis.maxTotal=5 
+- 1.    spring.redis.maxWaitMillis=5000 
+- 1.    spring.redis.testOnBorrow=false 
+- 1.    spring.redis.index=11
+2. 开启缓存@EnableAutoCache
    @SpringBootApplication
    @EnableAutoCache
    public class StartApplication{
@@ -47,6 +46,27 @@ spring-boot-cache-starter 基于spring-boot 高效分布式缓存
    }
 
 3. 通过注解配置需要缓存的对象
+   
+   @Cachable(name = "cache:user:" , key = "#userid" , expire = 2000)
+   public User getUserById(String userid)
+
+   @Cachable(name = "cache:user:details" , key = "#user.userid" , expire = 2000)
+   public UserDetail getUserDetails(User userid)
+
+   @Cachable(name = "cache:user:details" , key = "#user.userid" , expire = 2000)
+   public CompletableFuture<UserDetail> getUserDetailsAsync(User userid)
+    
+   
+   @CacheEvict(name = "cache:test:list" , key = "#id")
+   public void updateUser(String userid)
+
+
+   --name 缓存前缀部分
+   --key  基于SpeL表达式不同部分
+   --expire 缓存时间单位秒 默认不过期
+   --lock = true 添加分布式锁 防止大量不走缓存导致程序雪崩
+   
+   
 
 #### 参与贡献
 
@@ -56,11 +76,3 @@ spring-boot-cache-starter 基于spring-boot 高效分布式缓存
 4. 新建 Pull Request
 
 
-#### 码云特技
-
-1. 使用 Readme\_XXX.md 来支持不同的语言，例如 Readme\_en.md, Readme\_zh.md
-2. 码云官方博客 [blog.gitee.com](https://blog.gitee.com)
-3. 你可以 [https://gitee.com/explore](https://gitee.com/explore) 这个地址来了解码云上的优秀开源项目
-4. [GVP](https://gitee.com/gvp) 全称是码云最有价值开源项目，是码云综合评定出的优秀开源项目
-5. 码云官方提供的使用手册 [https://gitee.com/help](https://gitee.com/help)
-6. 码云封面人物是一档用来展示码云会员风采的栏目 [https://gitee.com/gitee-stars/](https://gitee.com/gitee-stars/)
