@@ -21,23 +21,23 @@ spring-boot-cache-starter 基于spring-boot 高效分布式缓存
    mvn clean install
 3. 在SpringBoot项目中添加依赖
    <dependency>
-            <groupId>com.jee</groupId>
-            <artifactId>spring-boot-cache-starter</artifactId>
-            <version>${your.version}</version>
+    <groupId>com.jee</groupId>
+    <artifactId>spring-boot-cache-starter</artifactId>
+    <version>${your.version}</version>
    </dependency>
 
 #### 使用说明
 
 1. 添加Redis支持(暂时只支持redis缓存 ，后续添加Memecached等)
-   在application.properties添加redis配置(支持多种Redis方式）
-- 1.    spring.redis.host=xx.xx.xx.xx
-- 1.    spring.redis.port=xx
-- 1.    spring.redis.password=xxx
-- 1.    spring.redis.maxIdle=10 
-- 1.    spring.redis.maxTotal=5 
-- 1.    spring.redis.maxWaitMillis=5000 
-- 1.    spring.redis.testOnBorrow=false 
-- 1.    spring.redis.index=11
+   在application.properties添加redis配置(支持多种Redis方式，参考spring-boot-redis-starter）
+   spring.redis.host=xx.xx.xx.xx
+   spring.redis.port=xx
+   spring.redis.password=xxx
+   spring.redis.maxIdle=10 
+   spring.redis.maxTotal=5 
+   spring.redis.maxWaitMillis=5000 
+   spring.redis.testOnBorrow=false 
+   spring.redis.index=11
 2. 开启缓存@EnableAutoCache
    @SpringBootApplication
    @EnableAutoCache
