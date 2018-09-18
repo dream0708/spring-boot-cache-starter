@@ -147,7 +147,7 @@ public class RedisCacheTemplate implements CacheTemplate {
 			@Override
 			public Boolean doInRedis(RedisConnection conn) throws DataAccessException {
 				boolean flag = conn.set(lockKey.getBytes(), String.valueOf(timeout).getBytes(),
-						Expiration.seconds(timeout), SetOption.SET_IF_ABSENT);
+						Expiration.from(timeout, TimeUnit.MILLISECONDS), SetOption.SET_IF_ABSENT);
 				log.info("lock key :{}  SET_IF_ABSENT : {} ", lockKey, flag);
 				return flag;
 			}
