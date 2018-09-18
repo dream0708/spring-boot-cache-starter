@@ -1,8 +1,16 @@
 package com.jee.cache.util;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.alibaba.fastjson.JSONArray;
+
+import io.protostuff.JsonIOUtil;
 import io.protostuff.LinkedBuffer;
 import io.protostuff.ProtostuffIOUtil;
 import io.protostuff.runtime.RuntimeSchema;
@@ -46,6 +54,10 @@ public class ProtobufUtils {
 		return message;
 	}
 	
+	
+	
+	
+	
 	public static <T> byte[] toProtobufBytes(T obj) {
 		return serialize(new ProtobufData<T>().result(obj)) ;
 	}
@@ -84,6 +96,10 @@ public class ProtobufUtils {
 		}
 	}
 	
+	
+	public static void main(String args[]) throws IOException {
+		
+	}
 	
 	
 	

@@ -17,8 +17,12 @@ public interface CacheTemplate {
 	
 	public boolean   delete(List<String> keys) ;
 	
+	public long currtDistributionTime() ;
 	
+	public Long tryLock(String lockKey, long lockTimeout) ;
 	
-	 
+	public void unlock(String lockKey, long lockValue ) ;
+	
+	public void unlock(String lockKey ) ;
 
 }

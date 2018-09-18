@@ -1,9 +1,12 @@
 package com.jee.cache.aspect;
 
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestToUriTemplate;
+
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -38,6 +41,10 @@ public class CacheAspect {
 
 	@Value("${cache.default.value:Cache}")
 	private String prefixCacheName = "Cache";
+	
+	@Value("${lock.default.timeout:200}")
+	private long  lockTimeOut = 200 ;
+	
 	
 	@Around("@annotation(com.jee.cache.annotation.Cacheable)")
 	public Object cacheSet(ProceedingJoinPoint pjp) throws Throwable {
@@ -75,9 +82,24 @@ public class CacheAspect {
 						method.getName(), name, key, ex.getClass());
 				result = pjp.proceed();
 			}
+			Long timeout = null ;
 			if (null == result) { // 正常从缓存拿到的result为空对象
 				if (cacheable.lock()) { // 分布式锁 同一时间只允许一个进程去执行该方法 防止雪崩
-
+					String lockKey = "LOCK:" + name + key ;
+					timeout = cacheTemplate.tryLock(lockKey, lockTimeOut)  ;
+					if(timeout == null) {
+						while(true) {
+							TimeUnit.MILLISECONDS.sleep(lockTimeOut);
+							result = cacheTemplate.getCacheObject(name + key) ;
+							if(result != null) {
+								if (returnType == CompletableFuture.class) {
+									return CompletableFuture.completedFuture(result);
+								}
+								return result ;
+							}
+						}
+					}
+					
 				}
 				log.info("no cache found , invoke the target method[{}] begin... ", method.getName());
 				Long current = System.currentTimeMillis();
@@ -100,12 +122,21 @@ public class CacheAspect {
 							} else {
 								cacheTemplate.setCacheObject(name + key, data);
 							}
+							if(cacheable.lock()) {
+								String lockKey = "LOCK:" + name + key ;
+								cacheTemplate.unlock(lockKey);
+							}
+							
 							return data;
 						} catch (Exception ex) {
 							log.error(ex.getMessage(), ex);
 							log.error(
 									" [cache async] result to cache error ****** method:{} ,  key :{} , timeout :{} ,  exception :{} ",
 									method.getName(), name + key, cacheable.expire(), ex.getMessage());
+							if(cacheable.lock()) {
+								String lockKey = "LOCK:" + name + key ;
+								cacheTemplate.unlock(lockKey);
+							}
 							return data;
 						}
 					});
@@ -118,11 +149,19 @@ public class CacheAspect {
 						} else {
 							cacheTemplate.setCacheObject(name + key, result);
 						}
+						if(cacheable.lock()) {
+							String lockKey = "LOCK:" + name + key ;
+							cacheTemplate.unlock(lockKey);
+						}
 						return result;
 					} catch (Exception ex) {
 						log.error(
 								" [cache sync ] result to cache error ****** method:{} , key : {} , timeout : {} ,  exception :{} ",
 								method.getName(), name + key, cacheable.expire(), ex.getMessage());
+						if(cacheable.lock()) {
+							String lockKey = "LOCK:" + name + key ;
+							cacheTemplate.unlock(lockKey);
+						}
 						return result;
 					}
 				}
