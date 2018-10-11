@@ -1,15 +1,17 @@
 package com.jee.cache.template.redis;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import org.springframework.cglib.core.CollectionUtils;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.connection.RedisStringCommands.SetOption;
+import org.springframework.data.redis.connection.ReturnType;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.types.Expiration;
+import org.springframework.scripting.bsh.BshScriptUtils.BshExecutionException;
 
 import com.jee.cache.template.CacheTemplate;
 import com.jee.cache.util.ProtobufUtils;
@@ -128,86 +130,57 @@ public class RedisCacheTemplate implements CacheTemplate {
 			}
 		});
 	}
-	
+
 	public Long del(String key) {
 		return redisTemplate.execute(new RedisCallback<Long>() {
 			@Override
 			public Long doInRedis(RedisConnection conn) throws DataAccessException {
-				return conn.del(key.getBytes()) ;
+				return conn.del(key.getBytes());
 			}
 		});
 	}
 
 	@Override
 	public Long tryLock(String lockKey, long lockTimeout) {
-		log.info("...{} 开始执行加锁    ", lockKey);
-		// 锁时间
-		Long timeout = currtDistributionTime() + lockTimeout + 1;
+		//Long timeout = currtDistributionTime();
+		log.info("开始执行加锁  lock key :{}  value : {}  ", lockKey, lockTimeout); // 锁时间
 		if (redisTemplate.execute(new RedisCallback<Boolean>() {
 			@Override
 			public Boolean doInRedis(RedisConnection conn) throws DataAccessException {
-				boolean flag = conn.set(lockKey.getBytes(), String.valueOf(timeout).getBytes(),
-						Expiration.from(timeout, TimeUnit.MILLISECONDS), SetOption.SET_IF_ABSENT);
-				log.info("lock key :{}  SET_IF_ABSENT : {} ", lockKey, flag);
+				boolean flag = conn.set(lockKey.getBytes(), String.valueOf(lockTimeout).getBytes(),
+						Expiration.from(lockTimeout, TimeUnit.MILLISECONDS), SetOption.SET_IF_ABSENT);
+				log.info("lock key :{} , value : {} ,  SET_IF_ABSENT : {} ", lockKey, lockTimeout, flag);
 				return flag;
 			}
 		})) {
-			return timeout;
-		} else {
-
-			// 未获取锁，尝试重新获取
-			// 此处使用double check 的思想，防止多线程同时竞争到锁
-			// 1) 先获取上一个锁的过期时间，校验当前是否过期。
-			// 2) 如果过期了，尝试使用getset方式获取锁。此处可能存在多个线程同时执行到的情况。
-			// 3) getset更新过期时间，并且获取上一个锁的过期时间。
-			// 4) 如果getset获取到的oldExpireAt 已过期，说明获取锁成功。
-			// 如果和当前比未过期，说明已经有另一个线程提前获取到了锁
-			// 这样也没问题，只是短暂的将上一个锁稍微延后一点时间（只有在A和B线程同时执行到getset时，才会出现，延长的时间很短）
-			// 获取redis里面的时间
-			String result = get(lockKey);
-			Long currentLockTimeout = (result == null ? null : Long.parseLong(result));
-			// 锁已经失效
-			if (currentLockTimeout != null && currentLockTimeout.longValue() < System.currentTimeMillis()) {
-				// 判断是否为空，不为空时，说明已经失效，如果被其他线程设置了值，则第二个条件判断无法执行
-				// 获取上一个锁到期时间，并设置现在的锁到期时间
-				Long oldLockTimeout = null;
-				byte[] bytes = getAndSet(lockKey, timeout.toString());
-				if (bytes != null && bytes.length > 0) {
-					oldLockTimeout = Long.valueOf(new String(bytes));
-				}
-				if (oldLockTimeout != null && oldLockTimeout.longValue() == currentLockTimeout.longValue()) {
-					// 多线程运行时，多个线程签好都到了这里，但只有一个线程的设置值和当前值相同，它才有权利获取锁
-					log.info("{}  加锁成功, OLD LOCKTIME equals CURRENT LOCKTIME...", lockKey);
-					// 设置超时间，释放内存
-					expireMillseconds(lockKey, lockTimeout);
-					// 返回加锁时间
-					return timeout;
-				}
-			}
+			return lockTimeout;
 		}
-
 		return null;
+	}
+
+	@Override
+	public boolean unlock(String lockKey, long lockValue) {
+		String script = "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end";
+
+		boolean flag = redisTemplate.execute(new RedisCallback<Boolean>() {
+			@Override
+			public Boolean doInRedis(RedisConnection conn) throws DataAccessException {
+				byte[][] bs = new byte[2][];
+				bs[0] = lockKey.getBytes();
+				bs[1] = String.valueOf(lockValue).getBytes();
+				return conn.eval(script.getBytes(), ReturnType.BOOLEAN, 2, bs);
+			}
+
+		});
+
+		return flag;
 
 	}
-	
-	
-	
-	@Override
-	public void unlock(String lockKey, long lockValue ) {
-		log.info("key:{} , value:{} 执行解锁...", lockKey, lockValue); // 正常直接删除
-		String result = get(lockKey) ; // 获取redis中设置的时间
-		Long currLockTimeout = (result == null) ? null : Long.valueOf(result);
-		// 如果是加锁者，则删除锁， 如果不是，则等待自动过期，重新竞争加锁
-		if (currLockTimeout != null && currLockTimeout.longValue() == lockValue) {
-			del(lockKey);
-			log.info("key:{} , value:{}解锁成功...", lockKey, lockValue);
-		}
 
-	}
-	
 	@Override
-	public void unlock(String lockKey) {
-		del(lockKey) ;
+	public boolean unlock(String lockKey) {
+		del(lockKey);
+		return true;
 
 	}
 }
