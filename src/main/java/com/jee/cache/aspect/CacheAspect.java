@@ -1,6 +1,5 @@
 package com.jee.cache.aspect;
 
-import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestToUriTemplate;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
