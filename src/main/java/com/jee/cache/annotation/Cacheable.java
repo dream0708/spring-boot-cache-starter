@@ -6,7 +6,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import net.bytebuddy.matcher.FailSafeMatcher;
 
 @Target({ ElementType.METHOD })
 @Retention(RetentionPolicy.RUNTIME)
@@ -23,3 +22,5 @@ public @interface Cacheable {
 
 	boolean lock() default false;
 }
+
+

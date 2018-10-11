@@ -28,6 +28,6 @@ public class RedisCacheTemplateConfiguration {
 		return template ;
 	}
 	
-	
+
 
 }
