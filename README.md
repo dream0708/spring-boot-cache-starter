@@ -7,7 +7,7 @@ spring-boot-cache-starter 基于spring-boot 高效分布式缓存
 #### 项目主要解决问题
 1. SpringCache 无法对不同的接口配置不同的过期时间
 2. 支持多种分布式方案（Redis Memecached等）
-3. 基于Protobuf高效的序列化方式
+3. 基于Protobuf等高效的序列化方式
 4. 支持异步对象（CompletableFuture）缓存
 
 
@@ -77,5 +77,9 @@ spring-boot-cache-starter 基于spring-boot 高效分布式缓存
 2. 新建 Feat_xxx 分支
 3. 提交代码
 4. 新建 Pull Request
+
+
+
+#### 欢迎你的加入
 
 
