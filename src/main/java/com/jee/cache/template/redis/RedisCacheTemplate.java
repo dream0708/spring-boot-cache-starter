@@ -1,6 +1,5 @@
 package com.jee.cache.template.redis;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -11,7 +10,6 @@ import org.springframework.data.redis.connection.ReturnType;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.types.Expiration;
-import org.springframework.scripting.bsh.BshScriptUtils.BshExecutionException;
 
 import com.jee.cache.template.CacheTemplate;
 import com.jee.cache.util.ProtobufUtils;
@@ -77,7 +75,6 @@ public class RedisCacheTemplate implements CacheTemplate {
 
 	@Override
 	public boolean delete(List<String> keys) {
-		// TODO Auto-generated method stub
 		return redisTemplate.execute(new RedisCallback<Boolean>() {
 			@Override
 			public Boolean doInRedis(RedisConnection conn) throws DataAccessException {
@@ -142,7 +139,7 @@ public class RedisCacheTemplate implements CacheTemplate {
 
 	@Override
 	public Long tryLock(String lockKey, long lockTimeout) {
-		//Long timeout = currtDistributionTime();
+		// Long timeout = currtDistributionTime();
 		log.info("开始执行加锁  lock key :{}  value : {}  ", lockKey, lockTimeout); // 锁时间
 		if (redisTemplate.execute(new RedisCallback<Boolean>() {
 			@Override

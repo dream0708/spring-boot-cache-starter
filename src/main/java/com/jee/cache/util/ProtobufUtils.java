@@ -54,13 +54,10 @@ public class ProtobufUtils {
 		return message;
 	}
 	
-	
-	
-	
-	
 	public static <T> byte[] toProtobufBytes(T obj) {
 		return serialize(new ProtobufData<T>().result(obj)) ;
 	}
+	
 	@SuppressWarnings("unchecked")
 	public static <T> T parseObject(byte[] bytes , Class<T> clazz) {
 		if(bytes == null || bytes.length == 0) {
@@ -72,6 +69,7 @@ public class ProtobufUtils {
 	
 	public static Object parseObject(byte[] bytes ) {
 		
+		@SuppressWarnings("unchecked")
 		ProtobufData<Object> data = deserialize(bytes , ProtobufData.class) ;
 		return data.getResult();
 	}
@@ -97,12 +95,5 @@ public class ProtobufUtils {
 	}
 	
 	
-	public static void main(String args[]) throws IOException {
-		
-	}
-	
-	
-	
-
 	
 }

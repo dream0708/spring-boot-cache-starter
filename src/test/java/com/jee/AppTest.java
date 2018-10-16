@@ -7,6 +7,7 @@ import junit.framework.TestSuite;
 /**
  * Unit test for simple App.
  */
+
 public class AppTest 
     extends TestCase
 {
@@ -15,9 +16,10 @@ public class AppTest
      *
      * @param testName name of the test case
      */
+	
     public AppTest( String testName )
     {
-        super( testName );
+        super( testName == null  ? "我是来测试的" : "不要不要" );
     }
 
     /**
